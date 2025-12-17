@@ -10,22 +10,18 @@ Features
 - Responsive design for mobile and desktop
 
  Technologies Used
+Technologies Used
 
-- HTML5
+- HTML5 (with embedded <script> logic)
 - CSS3
-- JavaScript (Vanilla)
-- [OpenWeatherMap API](https://openweathermap.org/api)
-- 
+- [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api)
+- [Open-Meteo Forecast API](https://open-meteo.com/en/docs)
+
  Getting Started
+
 1. Clone the repository
    bash
    git clone https://github.com/your-username/weather-app.git
-   Open index.html in your browser
+Open index.html in your browser
 
-2.Replace the API key
-
-3.Sign up at OpenWeatherMap
-
-4.Get your free API key
-
-5.Replace YOUR_API_KEY in the JavaScript file
+No API key required Open-Meteo APIs are free and public — no authentication needed.
