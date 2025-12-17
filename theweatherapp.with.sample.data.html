@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c1445 0%, #1a237e 30%, #1565c0 70%, #42a5f5 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateX(10deg) rotateY(-10deg); }
+            50% { transform: translateY(-20px) rotateX(10deg) rotateY(-10deg); }
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0) rotateX(5deg) rotateY(5deg); }
+            50% { transform: translateY(-15px) rotateX(5deg) rotateY(5deg); }
+        }
+
+        @keyframes floatText {
+            0%, 100% { transform: translateY(0) translateZ(20px); }
+            50% { transform: translateY(-10px) translateZ(30px); }
+        }
+
+        @keyframes pulse3d {
+            0%, 100% { transform: scale(1) rotateY(0deg); box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.5); }
+            50% { transform: scale(1.02) rotateY(5deg); box-shadow: 0 35px 60px -15px rgba(59, 130, 246, 0.6); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes cloudMove {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(10px) translateY(-5px); }
+            75% { transform: translateX(-10px) translateY(5px); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 60px #ffd54f, 0 0 100px #ffb300; }
+            50% { box-shadow: 0 0 80px #ffd54f, 0 0 120px #ffb300, 0 0 150px #ff8f00; }
+        }
+
+        .float-icon {
+            animation: float 4s ease-in-out infinite;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .float-slow {
+            animation: floatSlow 5s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+        .float-text {
+            animation: floatText 3s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+        .card-3d {
+            animation: pulse3d 6s ease-in-out infinite;
+            transform-style: preserve-3d;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #fff 0%, #93c5fd 25%, #fff 50%, #93c5fd 75%, #fff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+
+        /* 3D Weather Icons */
+        .weather-icon {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .sun {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px #ffd54f,
+                0 0 100px #ffb300,
+                inset -10px -10px 20px rgba(255,143,0,0.5),
+                inset 10px 10px 20px rgba(255,255,255,0.3);
+            animation: float 3s ease-in-out infinite, glow 2s ease-in-out infinite;
+        }
+
+        .cloud {
+            position: absolute;
+            background: linear-gradient(180deg, #fff 0%, #e3f2fd 50%, #bbdefb 100%);
+            border-radius: 50px;
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.2),
+                inset 0 -10px 20px rgba(187,222,251,0.5),
+                inset 0 10px 20px rgba(255,255,255,0.8);
+        }
+
+        .cloud-main {
+            width: 100px;
+            height: 40px;
+            top: 50px;
+            left: 10px;
+        }
+
+        .cloud-top {
+            width: 50px;
+            height: 50px;
+            top: 20px;
+            left: 30px;
+            border-radius: 50%;
+        }
+
+        .cloud-left {
+            width: 35px;
+            height: 35px;
+            top: 30px;
+            left: 15px;
+            border-radius: 50%;
+        }
+
+        .rain-drop {
+            position: absolute;
+            width: 4px;
+            height: 15px;
+            background: linear-gradient(180deg, transparent, #64b5f6);
+            border-radius: 0 0 10px 10px;
+            animation: rainFall 1s ease-in infinite;
+        }
+
+        @keyframes rainFall {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(30px); opacity: 0; }
+        }
+
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            animation: snowFall 2s ease-in infinite;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+
+        @keyframes snowFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(40px) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes flash {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        /* Background elements */
+        .bg-circle {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(66,165,245,0.3) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .forecast-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.18);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .search-box {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 0 30px rgba(66,165,245,0.3);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, #64b5f6, #42a5f5);
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(66,165,245,0.4);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <!-- Background decorations -->
+    <div class="bg-circle w-96 h-96 -top-48 -left-48 opacity-50"></div>
+    <div class="bg-circle w-64 h-64 top-1/2 -right-32 opacity-30"></div>
+    <div class="bg-circle w-80 h-80 -bottom-40 left-1/3 opacity-40"></div>
+
+    <div class="max-w-5xl mx-auto relative z-10">
+        <!-- Header with Search -->
+        <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+            <h1 class="text-3xl md:text-4xl font-bold shimmer-text float-text">
+                ☁️ Weather App
+            </h1>
+            <div class="search-box rounded-full px-6 py-3 flex items-center gap-3 w-full md:w-auto">
+                <svg class="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" id="cityInput" placeholder="Search city..." 
+                    class="bg-transparent border-none outline-none text-white placeholder-white/50 w-full md:w-64"
+                    value="New York">
+                <button onclick="searchCity()" class="search-btn px-4 py-1 rounded-full text-white text-sm font-medium">
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Weather Card -->
+        <div class="card-3d rounded-3xl p-8 mb-8">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
+                <!-- Left: Weather Icon -->
+                <div class="float-icon">
+                    <div class="weather-icon" id="mainWeatherIcon">
+                        <div class="sun"></div>
+                    </div>
+                </div>
+
+                <!-- Center: Temperature & Location -->
+                <div class="text-center lg:text-left flex-1">
+                    <p class="text-white/70 text-lg mb-2 float-slow" id="dateTime">Tuesday, March 15</p>
+                    <h2 class="text-5xl md:text-7xl font-bold text-white mb-2 float-text" id="temperature">24°</h2>
+                    <p class="text-2xl text-white/90 mb-1" id="cityName">New York, USA</p>
+                    <p class="text-lg text-blue-200" id="condition">Sunny</p>
+                </div>
+
+                <!-- Right: Weather Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="stat-card rounded-2xl p-4 text-center float-slow" style="animation-delay: 0.1s;">
+                        <div class="text-3xl mb-2">💧</div>
+                        <p class="text-white/60 text-sm">Humidity</p>
+                        <p class="text-white text-xl font-semibold" id="humidity">65%</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-4 text-center float-slow" style="animation-delay: 0.2s;">
+                        <div class="text-3xl mb-2">💨</div>
+                        <p class="text-white/60 text-sm">Wind</p>
+                        <p class="text-white text-xl font-semibold" id="wind">12 km/h</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-4 text-center float-slow" style="animation-delay: 0.3s;">
+                        <div class="text-3xl mb-2">🌡️</div>
+                        <p class="text-white/60 text-sm">Feels Like</p>
+                        <p class="text-white text-xl font-semibold" id="feelsLike">22°</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-4 text-center float-slow" style="animation-delay: 0.4s;">
+                        <div class="text-3xl mb-2">👁️</div>
+                        <p class="text-white/60 text-sm">Visibility</p>
+                        <p class="text-white text-xl font-semibold" id="visibility">10 km</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7 Day Forecast -->
+        <h3 class="text-xl font-semibold text-white mb-4 float-text">7-Day Forecast</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8" id="forecastContainer">
+            <!-- Forecast cards will be generated by JS -->
+        </div>
+
+        <!-- Hourly Forecast -->
+        <h3 class="text-xl font-semibold text-white mb-4 float-text">Hourly Forecast</h3>
+        <div class="card-3d rounded-2xl p-6 overflow-x-auto">
+            <div class="flex gap-6 min-w-max" id="hourlyContainer">
+                <!-- Hourly cards will be generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock weather data for different cities
+        const weatherData = {
+            'new york': {
+                city: 'New York',
+                country: 'USA',
+                temp: 24,
+                feelsLike: 22,
+                condition: 'Sunny',
+                type: 'sunny',
+                humidity: 65,
+                wind: 12,
+                visibility: 10,
+                forecast: [
+                    { day: 'Today', type: 'sunny', high: 24, low: 18 },
+                    { day: 'Mon', type: 'cloudy-sun', high: 22, low: 16 },
+                    { day: 'Tue', type: 'cloudy', high: 20, low: 15 },
+                    { day: 'Wed', type: 'rainy', high: 18, low: 14 },
+                    { day: 'Thu', type: 'rainy', high: 17, low: 13 },
+                    { day: 'Fri', type: 'cloudy-sun', high: 21, low: 15 },
+                    { day: 'Sat', type: 'sunny', high: 25, low: 18 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 24, type: 'sunny' },
+                    { time: '14:00', temp: 25, type: 'sunny' },
+                    { time: '15:00', temp: 26, type: 'sunny' },
+                    { time: '16:00', temp: 25, type: 'cloudy-sun' },
+                    { time: '17:00', temp: 23, type: 'cloudy-sun' },
+                    { time: '18:00', temp: 21, type: 'cloudy' },
+                    { time: '19:00', temp: 20, type: 'cloudy' },
+                    { time: '20:00', temp: 19, type: 'cloudy' }
+                ]
+            },
+            'london': {
+                city: 'London',
+                country: 'UK',
+                temp: 15,
+                feelsLike: 13,
+                condition: 'Rainy',
+                type: 'rainy',
+                humidity: 85,
+                wind: 20,
+                visibility: 5,
+                forecast: [
+                    { day: 'Today', type: 'rainy', high: 15, low: 10 },
+                    { day: 'Mon', type: 'rainy', high: 14, low: 9 },
+                    { day: 'Tue', type: 'cloudy', high: 16, low: 11 },
+                    { day: 'Wed', type: 'cloudy-sun', high: 18, low: 12 },
+                    { day: 'Thu', type: 'sunny', high: 20, low: 14 },
+                    { day: 'Fri', type: 'cloudy', high: 17, low: 12 },
+                    { day: 'Sat', type: 'rainy', high: 14, low: 10 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 15, type: 'rainy' },
+                    { time: '14:00', temp: 14, type: 'rainy' },
+                    { time: '15:00', temp: 14, type: 'rainy' },
+                    { time: '16:00', temp: 13, type: 'cloudy' },
+                    { time: '17:00', temp: 12, type: 'cloudy' },
+                    { time: '18:00', temp: 11, type: 'cloudy' },
+                    { time: '19:00', temp: 11, type: 'cloudy' },
+                    { time: '20:00', temp: 10, type: 'cloudy' }
+                ]
+            },
+            'tokyo': {
+                city: 'Tokyo',
+                country: 'Japan',
+                temp: 28,
+                feelsLike: 32,
+                condition: 'Partly Cloudy',
+                type: 'cloudy-sun',
+                humidity: 75,
+                wind: 8,
+                visibility: 12,
+                forecast: [
+                    { day: 'Today', type: 'cloudy-sun', high: 28, low: 22 },
+                    { day: 'Mon', type: 'sunny', high: 30, low: 24 },
+                    { day: 'Tue', type: 'sunny', high: 31, low: 25 },
+                    { day: 'Wed', type: 'cloudy-sun', high: 29, low: 23 },
+                    { day: 'Thu', type: 'rainy', high: 25, low: 20 },
+                    { day: 'Fri', type: 'stormy', high: 23, low: 19 },
+                    { day: 'Sat', type: 'cloudy', high: 26, low: 21 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 28, type: 'cloudy-sun' },
+                    { time: '14:00', temp: 29, type: 'sunny' },
+                    { time: '15:00', temp: 30, type: 'sunny' },
+                    { time: '16:00', temp: 29, type: 'sunny' },
+                    { time: '17:00', temp: 27, type: 'cloudy-sun' },
+                    { time: '18:00', temp: 25, type: 'cloudy-sun' },
+                    { time: '19:00', temp: 24, type: 'cloudy' },
+                    { time: '20:00', temp: 23, type: 'cloudy' }
+                ]
+            },
+            'paris': {
+                city: 'Paris',
+                country: 'France',
+                temp: 18,
+                feelsLike: 17,
+                condition: 'Cloudy',
+                type: 'cloudy',
+                humidity: 70,
+                wind: 15,
+                visibility: 8,
+                forecast: [
+                    { day: 'Today', type: 'cloudy', high: 18, low: 12 },
+                    { day: 'Mon', type: 'cloudy-sun', high: 20, low: 14 },
+                    { day: 'Tue', type: 'sunny', high: 22, low: 15 },
+                    { day: 'Wed', type: 'sunny', high: 24, low: 16 },
+                    { day: 'Thu', type: 'cloudy-sun', high: 21, low: 14 },
+                    { day: 'Fri', type: 'cloudy', high: 19, low: 13 },
+                    { day: 'Sat', type: 'rainy', high: 16, low: 11 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 18, type: 'cloudy' },
+                    { time: '14:00', temp: 18, type: 'cloudy' },
+                    { time: '15:00', temp: 19, type: 'cloudy-sun' },
+                    { time: '16:00', temp: 18, type: 'cloudy-sun' },
+                    { time: '17:00', temp: 17, type: 'cloudy' },
+                    { time: '18:00', temp: 15, type: 'cloudy' },
+                    { time: '19:00', temp: 14, type: 'cloudy' },
+                    { time: '20:00', temp: 13, type: 'cloudy' }
+                ]
+            },
+            'sydney': {
+                city: 'Sydney',
+                country: 'Australia',
+                temp: 22,
+                feelsLike: 21,
+                condition: 'Sunny',
+                type: 'sunny',
+                humidity: 55,
+                wind: 18,
+                visibility: 15,
+                forecast: [
+                    { day: 'Today', type: 'sunny', high: 22, low: 16 },
+                    { day: 'Mon', type: 'sunny', high: 24, low: 17 },
+                    { day: 'Tue', type: 'cloudy-sun', high: 23, low: 16 },
+                    { day: 'Wed', type: 'cloudy', high: 20, low: 14 },
+                    { day: 'Thu', type: 'rainy', high: 18, low: 13 },
+                    { day: 'Fri', type: 'cloudy-sun', high: 21, low: 15 },
+                    { day: 'Sat', type: 'sunny', high: 25, low: 18 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 22, type: 'sunny' },
+                    { time: '14:00', temp: 23, type: 'sunny' },
+                    { time: '15:00', temp: 24, type: 'sunny' },
+                    { time: '16:00', temp: 23, type: 'sunny' },
+                    { time: '17:00', temp: 21, type: 'cloudy-sun' },
+                    { time: '18:00', temp: 19, type: 'cloudy-sun' },
+                    { time: '19:00', temp: 18, type: 'cloudy' },
+                    { time: '20:00', temp: 17, type: 'cloudy' }
+                ]
+            },
+            'moscow': {
+                city: 'Moscow',
+                country: 'Russia',
+                temp: -5,
+                feelsLike: -10,
+                condition: 'Snowy',
+                type: 'snowy',
+                humidity: 90,
+                wind: 25,
+                visibility: 3,
+                forecast: [
+                    { day: 'Today', type: 'snowy', high: -5, low: -12 },
+                    { day: 'Mon', type: 'snowy', high: -3, low: -10 },
+                    { day: 'Tue', type: 'cloudy', high: -1, low: -8 },
+                    { day: 'Wed', type: 'cloudy', high: 0, low: -6 },
+                    { day: 'Thu', type: 'snowy', high: -4, low: -11 },
+                    { day: 'Fri', type: 'snowy', high: -7, low: -15 },
+                    { day: 'Sat', type: 'cloudy', high: -2, low: -9 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: -5, type: 'snowy' },
+                    { time: '14:00', temp: -4, type: 'snowy' },
+                    { time: '15:00', temp: -4, type: 'snowy' },
+                    { time: '16:00', temp: -6, type: 'cloudy' },
+                    { time: '17:00', temp: -8, type: 'cloudy' },
+                    { time: '18:00', temp: -10, type: 'cloudy' },
+                    { time: '19:00', temp: -11, type: 'snowy' },
+                    { time: '20:00', temp: -12, type: 'snowy' }
+                ]
+            },
+            'dubai': {
+                city: 'Dubai',
+                country: 'UAE',
+                temp: 38,
+                feelsLike: 42,
+                condition: 'Hot & Sunny',
+                type: 'sunny',
+                humidity: 40,
+                wind: 10,
+                visibility: 20,
+                forecast: [
+                    { day: 'Today', type: 'sunny', high: 38, low: 28 },
+                    { day: 'Mon', type: 'sunny', high: 40, low: 30 },
+                    { day: 'Tue', type: 'sunny', high: 41, low: 31 },
+                    { day: 'Wed', type: 'sunny', high: 39, low: 29 },
+                    { day: 'Thu', type: 'cloudy-sun', high: 37, low: 27 },
+                    { day: 'Fri', type: 'sunny', high: 38, low: 28 },
+                    { day: 'Sat', type: 'sunny', high: 42, low: 32 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 38, type: 'sunny' },
+                    { time: '14:00', temp: 40, type: 'sunny' },
+                    { time: '15:00', temp: 41, type: 'sunny' },
+                    { time: '16:00', temp: 40, type: 'sunny' },
+                    { time: '17:00', temp: 37, type: 'sunny' },
+                    { time: '18:00', temp: 34, type: 'sunny' },
+                    { time: '19:00', temp: 31, type: 'cloudy-sun' },
+                    { time: '20:00', temp: 29, type: 'cloudy' }
+                ]
+            },
+            'johannsburg': {
+                city: 'johannsburg',
+                country: 'south Africa',
+                temp: 30,
+                feelsLike: 35,
+                condition: 'Thunderstorm',
+                type: 'stormy',
+                humidity: 88,
+                wind: 30,
+                visibility: 4,
+                forecast: [
+                    { day: 'Today', type: 'stormy', high: 30, low: 25 },
+                    { day: 'Mon', type: 'rainy', high: 28, low: 24 },
+                    { day: 'Tue', type: 'cloudy', high: 29, low: 24 },
+                    { day: 'Wed', type: 'cloudy-sun', high: 31, low: 25 },
+                    { day: 'Thu', type: 'sunny', high: 32, low: 26 },
+                    { day: 'Fri', type: 'sunny', high: 33, low: 27 },
+                    { day: 'Sat', type: 'stormy', high: 29, low: 24 }
+                ],
+                hourly: [
+                    { time: 'Now', temp: 30, type: 'stormy' },
+                    { time: '14:00', temp: 28, type: 'stormy' },
+                    { time: '15:00', temp: 27, type: 'rainy' },
+                    { time: '16:00', temp: 28, type: 'rainy' },
+                    { time: '17:00', temp: 27, type: 'cloudy' },
+                    { time: '18:00', temp: 26, type: 'cloudy' },
+                    { time: '19:00', temp: 25, type: 'cloudy-sun' },
+                    { time: '20:00', temp: 25, type: 'cloudy' }
+                ]
+            }
+        };
+
+        function getWeatherIcon(type, size = 'small') {
+            const icons = {
+                'sunny': '☀️',
+                'cloudy': '☁️',
+                'cloudy-sun': '⛅',
+                'rainy': '🌧️',
+                'snowy': '❄️',
+                'stormy': '⛈️'
+            };
+            return `<span class="text-${size === 'small' ? '3xl' : '6xl'}">${icons[type] || '☀️'}</span>`;
+        }
+
+        function create3DIcon(type) {
+            let html = '<div class="weather-icon relative">';
+            
+            if (type === 'sunny') {
+                html += '<div class="sun"></div>';
+            } else if (type === 'cloudy' || type === 'cloudy-sun') {
+                if (type === 'cloudy-sun') {
+                    html += '<div class="sun" style="width:50px;height:50px;position:absolute;top:10px;right:10px;"></div>';
+                }
+                html += `
+                    <div class="cloud cloud-main" style="animation: cloudMove 4s ease-in-out infinite;"></div>
+                    <div class="cloud cloud-top" style="animation: cloudMove 4s ease-in-out infinite 0.5s;"></div>
+                    <div class="cloud cloud-left" style="animation: cloudMove 4s ease-in-out infinite 1s;"></div>
+                `;
+            } else if (type === 'rainy') {
+                html += `
+                    <div class="cloud cloud-main"></div>
+                    <div class="cloud cloud-top"></div>
+                    <div class="cloud cloud-left"></div>
+                    <div class="rain-drop" style="left: 30px; top: 85px;"></div>
+                    <div class="rain-drop" style="left: 50px; top: 85px; animation-delay: 0.3s;"></div>
+                    <div class="rain-drop" style="left: 70px; top: 85px; animation-delay: 0.6s;"></div>
+                    <div class="rain-drop" style="left: 90px; top: 85px; animation-delay: 0.9s;"></div>
+                `;
+            } else if (type === 'snowy') {
+                html += `
+                    <div class="cloud cloud-main" style="background: linear-gradient(180deg, #e0e0e0 0%, #bdbdbd 100%);"></div>
+                    <div class="cloud cloud-top" style="background: linear-gradient(180deg, #e0e0e0 0%, #bdbdbd 100%);"></div>
+                    <div class="cloud cloud-left" style="background: linear-gradient(180deg, #e0e0e0 0%, #bdbdbd 100%);"></div>
+                    <div class="snowflake" style="left: 25px; top: 85px;">❄</div>
+                    <div class="snowflake" style="left: 50px; top: 85px; animation-delay: 0.5s;">❄</div>
+                    <div class="snowflake" style="left: 75px; top: 85px; animation-delay: 1s;">❄</div>
+                    <div class="snowflake" style="left: 95px; top: 85px; animation-delay: 1.5s;">❄</div>
+                `;
+            } else if (type === 'stormy') {
+                html += `
+                    <div class="cloud cloud-main" style="background: linear-gradient(180deg, #78909c 0%, #546e7a 100%);"></div>
+                    <div class="cloud cloud-top" style="background: linear-gradient(180deg, #78909c 0%, #546e7a 100%);"></div>
+                    <div class="cloud cloud-left" style="background: linear-gradient(180deg, #78909c 0%, #546e7a 100%);"></div>
+                    <div class="rain-drop" style="left: 30px; top: 85px;"></div>
+                    <div class="rain-drop" style="left: 70px; top: 85px; animation-delay: 0.4s;"></div>
+                    <div style="position:absolute;left:50px;top:80px;font-size:20px;animation: flash 1.5s infinite;">⚡</div>
+                `;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const day = days[now.getDay()];
+            const month = months[now.getMonth()];
+            const date = now.getDate();
+            document.getElementById('dateTime').textContent = `${day}, ${month} ${date}`;
+        }
+
+        function updateWeather(data) {
+            document.getElementById('temperature').textContent = `${data.temp}°`;
+            document.getElementById('cityName').textContent = `${data.city}, ${data.country}`;
+            document.getElementById('condition').textContent = data.condition;
+            document.getElementById('humidity').textContent = `${data.humidity}%`;
+            document.getElementById('wind').textContent = `${data.wind} km/h`;
+            document.getElementById('feelsLike').textContent = `${data.feelsLike}°`;
+            document.getElementById('visibility').textContent = `${data.visibility} km`;
+
+            // Update main icon
+            document.getElementById('mainWeatherIcon').innerHTML = create3DIcon(data.type);
+
+            // Update forecast
+            const forecastContainer = document.getElementById('forecastContainer');
+            forecastContainer.innerHTML = data.forecast.map((day, i) => `
+                <div class="forecast-card rounded-2xl p-4 text-center cursor-pointer" style="animation-delay: ${i * 0.1}s;">
+                    <p class="text-white/70 text-sm mb-2">${day.day}</p>
+                    <div class="text-4xl mb-2 float-slow" style="animation-delay: ${i * 0.15}s;">
+                        ${getWeatherIcon(day.type)}
+                    </div>
+                    <p class="text-white text-xl font-semibold">${day.high}°</p>
+                    <p class="text-blue-200 text-sm">${day.low}°</p>
+                </div>
+            `).join('');
+
+            // Update hourly
+            const hourlyContainer = document.getElementById('hourlyContainer');
+            hourlyContainer.innerHTML = data.hourly.map((hour, i) => `
+                <div class="text-center min-w-[80px] float-slow" style="animation-delay: ${i * 0.1}s;">
+                    <p class="text-white/70 text-sm mb-3">${hour.time}</p>
+                    <div class="text-3xl mb-3">${getWeatherIcon(hour.type)}</div>
+                    <p class="text-white text-lg font-semibold">${hour.temp}°</p>
+                </div>
+            `).join('');
+        }
+
+        function searchCity() {
+            const input = document.getElementById('cityInput').value.toLowerCase().trim();
+            const data = weatherData[input];
+            
+            if (data) {
+                updateWeather(data);
+            } else {
+                // Default to New York if city not found
+                alert('City not found! Try: New York, London, Tokyo, Paris, Sydney, Moscow, Dubai, or Miami');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            updateWeather(weatherData['new york']);
+            
+            // Update time every minute
+            setInterval(updateDateTime, 60000);
+            
+            // Enter key search
+            document.getElementById('cityInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchCity();
+            });
+        });
+    </script>
+</body>
+</html>
